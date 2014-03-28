@@ -55,7 +55,7 @@ var USO = (function () {
 	}
 
 	// DOM
-	_.L = function (s) { return document.createTextNode (s) }
+	_.T = _.L = function (s) { return document.createTextNode (s) }
 	_.C = function (s) { return document.createElement (s) }
 	_.inject = function ( tag, src ) {
 		var ret = _.C (tag);
