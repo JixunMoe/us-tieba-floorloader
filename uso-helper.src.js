@@ -17,7 +17,7 @@ var USO = (function () {
 		return arr instanceof Object;
 	};
 	_.isFun = function (fun) {
-		return arr instanceof Function;
+		return fun instanceof Function;
 	};
 
 	// ARRAY
