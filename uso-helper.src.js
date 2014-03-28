@@ -22,11 +22,8 @@ var USO = (function () {
 
 	// ARRAY
 	_.forEach = _.each = function (arr, cb) {
-		var i;
-		if (_.isArr(arr))
-			for (i=0; i<arr.length; i++)
-				cb (arr[i], i);
-		else for (i in arr)	cb (arr[i], i);
+		for (var i=0; i<arr.length; i++)
+			cb (arr[i], i);
 	};
 
 	_.last = function (arr) { return arr[arr.length -1] };
