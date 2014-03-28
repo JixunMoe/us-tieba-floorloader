@@ -1,4 +1,4 @@
-us-tieba-floorloader
-====================
+# Project USO Helper
+A lightweight helper for personal usage.
 
-貼吧樓層事件綁定
+More info please visit Project wiki.
