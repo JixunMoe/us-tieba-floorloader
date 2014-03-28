@@ -142,7 +142,7 @@ var USO = (function () {
 	};
 	_.append = function (src) {
 		for (var i = 1; i < arguments.length; i++)
-			_.appendSafe (arc, arguments[i]);
+			_.appendSafe (src, arguments[i]);
 		return src;
 	};
 	_.$ = function (q) {
