@@ -115,7 +115,7 @@ var USO = (function () {
 	};
 	_.click = function (ele, cb) {
 		if (cb && _.isFun(cb))
-			return _.on('ele', cb);
+			return _.on(ele, 'click', cb);
 		return _.fire (ele, 'click');
 	};
 	_.cssSafe = function (ele, styleObj, noMoreTry) {
