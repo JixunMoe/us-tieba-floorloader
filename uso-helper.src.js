@@ -19,11 +19,17 @@ var USO = (function () {
 	_.isFun = function (fun) {
 		return fun instanceof Function;
 	};
-
+	_.isNum = function (num) {
+		return 'number' == typeof num;
+	};
+	_.isStr = function (str) {
+		return 'string' == typeof str;
+	}
 	// ARRAY
 	_.forEach = _.each = function (arr, cb) {
-		for (var i=0; i<arr.length; i++)
-			cb (arr[i], i);
+		for (var i=0, r; i<arr.length; i++)
+			r = cb (arr[i], i);
+		return r;
 	};
 
 	_.last = function (arr) { return arr[arr.length -1] };
@@ -41,7 +47,7 @@ var USO = (function () {
 	// STRING
 	_.json = function (str, defValue) {
 		if (!defValue) defValue = {};
-		str = str.trim();
+		str = (str||'').trim();
 		if (!str) return defValue;
 
 		try {
@@ -50,7 +56,10 @@ var USO = (function () {
 			return defValue || {};
 		}
 	}
-
+	_.rm = function (ele) {
+		if (ele.length) return _.each (ele, _.rm);
+		return ele.parentNode && ele.parentNode.removeChild (ele);
+	};
 	// DOM
 	_.T = _.L = function (s) { return document.createTextNode (s) }
 	_.C = function (s) { return document.createElement (s) }
@@ -68,31 +77,94 @@ var USO = (function () {
 	};
 	_.css = function (ele, attr, val) {
 		if (ele.length) {
-			_.forEach (ele, function (t) {css (t, attr)});
+			_.each (ele, function (t) {css (t, attr)});
+			return ele;
+		}
+		// debugger;
+		if (_.isObj (attr)) {
+			for (var x in attr) ele.style[x] = attr[x];
+		} else if (arguments.length == 2) {
+			return getComputedStyle(ele)[attr];
 		} else {
-			for (x in attr) ele.style[x] = attr[x];
+			ele.style[attr] = val;
 		}
 		return ele;
 	};
+	_.ran = function () {
+		return String.prototype.slice.apply(Math.random(), [2]);
+	}
+	_.opacity = function (ele, newOpacity) {
+		if (arguments.length == 1)
+			return _.css ('opacity')
+		ele.display.opacity = newOpacity;
+	};
+	var animation = function (ele, animationName, delay, callback) {
+		console.log (ele);
+		var myId  = _.ran(),
+			attrName = 'jx-animation-' + animationName,
+			customCallback = function () {
+				if (_.attr(ele, attrName) == myId && callback (ele, animationName, delay)) {
+					setTimeout (customCallback, delay);
+				}
+			};
+		_.attr(ele, attrName, myId);
+		setTimeout (customCallback, delay);
+	}, findSpeed = function (speed) {
+		if (!speed) return 100;
+		if (_.isNum(speed)) return speed;
+		return speed == 'fast'
+			? 10
+			: 100;
+	}
+	_.fadeIn = function (ele, speed) {
+		animation (ele, 'opacity', findSpeed(speed), function () {
+			var o = parseFloat (_.css(ele, 'opacity'));
+			if (1 != o) {
+				_.css (ele, 'opacity', o + 0.05);
+				return true;
+			}
+		});
+	};
+	_.fadeOut = function (ele, speed) {
+		animation (ele, 'opacity', findSpeed(speed), function () {
+			var o = parseFloat(_.css(ele, 'opacity'));
+			if (0 != o) {
+				_.css (ele, 'opacity', o - 0.05);
+				return true;
+			}
+		});
+	};
+	_.show = function (ele) {
+		ele.style.display = _.attr(ele, 'hide-method') || 'block';
+	};
+	_.hide = function (ele) {
+		_.attr (ele, 'hide-method', _.css(ele, 'display'));
+		_.css(ele, 'display')
+		ele.style.display = 'none';
+	};
 	_.attr = function (ele, name, val) {
+		if (ele.length) {
+			_.each (ele, function (e) {
+				_.attr(e, name, val);
+			});
+			return ele;
+		}
 		if (_.isObj (name)) {
 			// { x: xx, .. }
-			for (x in name)
+			for (var x in name)
 				ele.setAttribute (x, name[x]);
 			return ele;
 		}
-		if (arguments.length != 3)
+		if (arguments.length == 2)
 			return ele.getAttribute (name);
-		ele.setAttribute (x, val);
+
+		ele.setAttribute (name, val);
 		return ele;
 	};
-	_.click = function () {
-
-	};
-	function insertAfter (what, ref) {
+	_.insertAfter = function (what, ref) {
 		ref.parentNode.insertBefore (what, ref.nextSibling)
 	}
-	function insertBefore (what, ref) {
+	_.insertBefore = function (what, ref) {
 		ref.parentNode.insertBefore (what, ref)
 	}
 	// Build css for webkit and moz;
@@ -118,19 +190,6 @@ var USO = (function () {
 			return _.on(ele, 'click', cb);
 		return _.fire (ele, 'click');
 	};
-	_.cssSafe = function (ele, styleObj, noMoreTry) {
-		// 没写特定浏览器匹配规则 :3
-		for (x in styleObj) {
-			try {
-				ele.style[x.replace(/-(.)/g, function (a,xx) {return xx.toUpperCase ()})] = styleObj[x];
-			} catch (e) {
-				if (!noMoreTry) {
-					_.cssSafe (ele, _.buildCSS (x, styleObj[x]), true)
-				}
-				console.warn (e);
-			}
-		}
-	};
 	_.appendSafe = function (ele, cont) {
 		if (cont.nodeType)
 			ele.appendChild (cont);
@@ -142,6 +201,18 @@ var USO = (function () {
 			_.appendSafe (src, arguments[i]);
 		return src;
 	};
+	_.filter = function (arr, cb) {
+		if (arr.filter)
+			return arr.filter(cb);
+		if (!arr.length)
+			return [];
+		var ret = [];
+		for (var i=0; i<arr.length; i++) {
+			if (cb(arr[i]))
+				ret.push (arr[i]);
+		}
+		return ret;
+	}
 	_.$ = function (q) {
 		return document.querySelector(q);
 	};
@@ -155,7 +226,9 @@ var USO = (function () {
 		var floorCallbacks = [],
 			mo = new MutationObserver(function (m) {
 				m.forEach (function (q, e) {
-					e = q.addedNodes;
+					e = _.filter(q.addedNodes, function (t) {
+						return t.className && t.className.indexOf('l_post') !== -1;
+					});
 					if (!e.length)
 						return;
 					// 调用回调
@@ -201,3 +274,5 @@ var USO = (function () {
 		_: _
 	}
 })();
+
+var _ = USO._;
