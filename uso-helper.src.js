@@ -225,18 +225,26 @@ var USO = (function () {
 	var floorLoader = (function () {
 		var floorCallbacks = [],
 			mo = new MutationObserver(function (m) {
-				m.forEach (function (q, e) {
-					e = _.filter(q.addedNodes, function (t) {
-						return t.className && t.className.indexOf('l_post') !== -1;
-					});
-					if (!e.length)
-						return;
-					// 调用回调
-					for (var i=0; i<e.length; i++)
+				console.group ? console.group ('[floorLoader]') : console.log ('[floorLoader]');
+				console.log (m);
+				m.forEach (function (q, e, p) {
+					_.each (q.addedNodes, function (t) {
+						if (!t.className) return;
+
+						var isLzl = 
+							t.className.indexOf('lzl_single_post') !== -1
+								? true
+								: t.className.indexOf('l_post') !== -1
+									? false
+									: null;
+						if (isLzl == null) return;
+
 						floorCallbacks.forEach (function (fCallback) {
-							fCallback (e[i]);
+							fCallback (t, isLzl);
 						});
+					});
 				});
+				console.groupEnd && console.groupEnd ();
 			});
 		
 		return {
@@ -259,7 +267,11 @@ var USO = (function () {
 			// 初始化事件监听
 			// postsDom: 可忽略; 传入一个 id 为 j_p_postlist 的元素, 用于监视事件。
 			_init: function (postsDom) {
-				mo.observe(postsDom || _.$('#j_p_postlist'), { childList: true });
+				mo.observe(postsDom || _.$('#j_p_postlist') || _.$('#thread_list'), {
+					childList: true,
+					// characterData: true,
+					subtree: true
+				});
 			},
 			// 销毁事件监听
 			_destory: function () {
